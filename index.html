@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Neural Lottery | Neura Testnet</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #0f172a; color: white; padding: 50px; }
+        .card { background: #1e293b; padding: 30px; border-radius: 15px; display: inline-block; border: 1px solid #334155; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
+        button:hover { background: #2563eb; }
+        input { padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; width: 100px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Neural Lottery 🧠</h1>
+        <p>Сеть: Neura Testnet (267)</p>
+        <button id="connectBtn">Подключить Rabby</button>
+        <div id="gameArea" style="display:none;">
+            <p>Ваш адрес: <span id="userAddr"></span></p>
+            <hr>
+            <h3>Купить билеты (0.01 ETH за шт.)</h3>
+            <input type="number" id="ticketQty" value="1" min="1">
+            <button id="buyBtn">Купить билеты</button>
+            <p id="status"></p>
+        </div>
+    </div>
+
+    <script>
+        const contractAddress = "0xA02758177B57aA1807A66782806853C96662BB75";
+        const abi = [
+            "function buyTickets(uint256 amount) external payable",
+            "function ticketsSold() public view returns (uint256)"
+        ];
+
+        let signer;
+        let contract;
+
+        document.getElementById('connectBtn').onclick = async () => {
+            if (window.ethereum) {
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send("eth_requestAccounts", []);
+                signer = provider.getSigner();
+                contract = new ethers.Contract(contractAddress, abi, signer);
+                
+                document.getElementById('userAddr').innerText = await signer.getAddress();
+                document.getElementById('connectBtn').style.display = 'none';
+                document.getElementById('gameArea').style.display = 'block';
+            } else {
+                alert("Пожалуйста, установите Rabby Wallet!");
+            }
+        };
+
+        document.getElementById('buyBtn').onclick = async () => {
+            try {
+                const qty = document.getElementById('ticketQty').value;
+                const price = ethers.utils.parseEther("0.01");
+                const totalValue = price.mul(qty);
+
+                document.getElementById('status').innerText = "Ожидание подтверждения...";
+                const tx = await contract.buyTickets(qty, { value: totalValue });
+                await tx.wait();
+                document.getElementById('status').innerText = "Успешно куплено!";
+            } catch (err) {
+                console.error(err);
+                document.getElementById('status').innerText = "Ошибка: " + err.reason;
+            }
+        };
+    </script>
+</body>
+</html>
