@@ -2,28 +2,50 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Neural Lottery | Neura Testnet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Lottery | Pro Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #0f172a; color: white; padding: 50px; }
-        .card { background: #1e293b; padding: 30px; border-radius: 15px; display: inline-block; border: 1px solid #334155; }
-        button { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 10px; }
-        button:hover { background: #2563eb; }
-        input { padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; width: 100px; }
+        :root { --bg: #0b0e14; --card: #161b22; --accent: #7c3aed; --text: #f0f6fc; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .dashboard { width: 90%; max-width: 1000px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px; }
+        .card { background: var(--card); border: 1px solid #30363d; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.5); transition: 0.3s; }
+        .card:hover { border-color: var(--accent); }
+        .stat-value { font-size: 24px; font-weight: bold; color: #3fb950; margin: 10px 0; }
+        .main-panel { grid-column: 1 / -1; background: linear-gradient(145deg, #1e1b4b, #161b22); padding: 40px; }
+        button { background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px; font-size: 16px; }
+        button:hover { filter: brightness(1.2); }
+        input { background: #0d1117; border: 1px solid #30363d; color: white; padding: 12px; border-radius: 8px; width: 80px; text-align: center; }
+        .status { margin-top: 15px; font-size: 14px; color: #8b949e; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>Neural Lottery 🧠</h1>
-        <p>Network: Neura Testnet (267)</p>
-        <button id="connectBtn">Connect Rabby Wallet</button>
-        <div id="gameArea" style="display:none;">
-            <p>Your Address: <span id="userAddr"></span></p>
-            <hr>
-            <h3>Buy Tickets (0.01 ETH each)</h3>
-            <input type="number" id="ticketQty" value="1" min="1">
-            <button id="buyBtn">Buy Tickets</button>
-            <p id="status"></p>
+    <div class="dashboard">
+        <div class="card main-panel">
+            <h1>Neural Lottery 🧠</h1>
+            <p id="networkStatus">Connect wallet to start</p>
+            <button id="connectBtn">Connect Rabby Wallet</button>
+            <div id="controls" style="display:none;">
+                <p>Your Address: <small id="userAddr" style="color: #8b949e;"></small></p>
+                <div style="margin-top: 30px;">
+                    <input type="number" id="ticketQty" value="1" min="1">
+                    <button id="buyBtn" style="width: auto; margin-left: 10px;">Buy Tickets</button>
+                </div>
+                <p id="status" class="status"></p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div>Prize Pool 💰</div>
+            <div class="stat-value" id="prizePool">0.00 ETH</div>
+        </div>
+        <div class="card">
+            <div>Tickets Sold 🎟️</div>
+            <div class="stat-value" id="ticketsSold">0</div>
+        </div>
+        <div class="card">
+            <div>Your Tickets 👤</div>
+            <div class="stat-value" id="yourTickets">0</div>
         </div>
     </div>
 
@@ -31,11 +53,20 @@
         const contractAddress = "0xA96DAF4459E7d01EF60A8fDd25b7516D9c973386";
         const abi = [
             "function buyTickets(uint256 amount) external payable",
-            "function ticketsSold() public view returns (uint256)"
+            "function ticketsSold() public view returns (uint256)",
+            "function getBalance() public view returns (uint256)"
         ];
 
-        let signer;
-        let contract;
+        let signer, contract;
+
+        async function updateStats() {
+            try {
+                const sold = await contract.ticketsSold();
+                document.getElementById('ticketsSold').innerText = sold.toString();
+                const balance = await contract.provider.getBalance(contractAddress);
+                document.getElementById('prizePool').innerText = ethers.utils.formatEther(balance) + " ETH";
+            } catch (e) { console.error("Update error", e); }
+        }
 
         document.getElementById('connectBtn').onclick = async () => {
             if (window.ethereum) {
@@ -44,27 +75,28 @@
                 signer = provider.getSigner();
                 contract = new ethers.Contract(contractAddress, abi, signer);
                 
-                document.getElementById('userAddr').innerText = await signer.getAddress();
+                const addr = await signer.getAddress();
+                document.getElementById('userAddr').innerText = addr;
                 document.getElementById('connectBtn').style.display = 'none';
-                document.getElementById('gameArea').style.display = 'block';
-            } else {
-                alert("Please install Rabby Wallet!");
+                document.getElementById('controls').style.display = 'block';
+                document.getElementById('networkStatus').innerText = "Network: Neura Testnet";
+                
+                setInterval(updateStats, 5000);
+                updateStats();
             }
         };
 
         document.getElementById('buyBtn').onclick = async () => {
             try {
                 const qty = document.getElementById('ticketQty').value;
-                const price = ethers.utils.parseEther("0.01");
-                const totalValue = price.mul(qty);
-
-                document.getElementById('status').innerText = "Waiting for confirmation...";
+                const totalValue = ethers.utils.parseEther("0.01").mul(qty);
+                document.getElementById('status').innerText = "Processing transaction...";
                 const tx = await contract.buyTickets(qty, { value: totalValue });
                 await tx.wait();
-                document.getElementById('status').innerText = "Tickets purchased successfully!";
+                document.getElementById('status').innerText = "Successfully purchased!";
+                updateStats();
             } catch (err) {
-                console.error(err);
-                document.getElementById('status').innerText = "Error: " + (err.reason || "Transaction failed");
+                document.getElementById('status').innerText = "Error: " + (err.reason || "Check funds");
             }
         };
     </script>
