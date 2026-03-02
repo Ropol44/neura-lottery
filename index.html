@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neural Lottery | Pro Dashboard</title>
+    <title>Neural Lottery | Neura ANKR Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
     <style>
-        :root { --bg: #0b0e14; --card: #161b22; --accent: #7c3aed; --text: #f0f6fc; }
+        :root { --bg: #0b0e14; --card: #161b22; --accent: #f59e0b; --text: #f0f6fc; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
         .dashboard { width: 90%; max-width: 1000px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px; }
         .card { background: var(--card); border: 1px solid #30363d; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.5); transition: 0.3s; }
         .card:hover { border-color: var(--accent); }
-        .stat-value { font-size: 24px; font-weight: bold; color: #3fb950; margin: 10px 0; }
+        .stat-value { font-size: 24px; font-weight: bold; color: #f59e0b; margin: 10px 0; }
         .main-panel { grid-column: 1 / -1; background: linear-gradient(145deg, #1e1b4b, #161b22); padding: 40px; }
-        button { background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px; font-size: 16px; }
-        button:hover { filter: brightness(1.2); }
+        button { background: var(--accent); color: #000; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px; font-size: 16px; }
+        button:hover { filter: brightness(1.1); }
         input { background: #0d1117; border: 1px solid #30363d; color: white; padding: 12px; border-radius: 8px; width: 80px; text-align: center; }
         .status { margin-top: 15px; font-size: 14px; color: #8b949e; }
     </style>
@@ -37,15 +37,15 @@
 
         <div class="card">
             <div>Prize Pool 💰</div>
-            <div class="stat-value" id="prizePool">0.00 ETH</div>
+            <div class="stat-value" id="prizePool">0.00 ANKR</div>
         </div>
         <div class="card">
             <div>Tickets Sold 🎟️</div>
             <div class="stat-value" id="ticketsSold">0</div>
         </div>
         <div class="card">
-            <div>Your Tickets 👤</div>
-            <div class="stat-value" id="yourTickets">0</div>
+            <div>Price per Ticket</div>
+            <div class="stat-value">0.01 ANKR</div>
         </div>
     </div>
 
@@ -53,8 +53,7 @@
         const contractAddress = "0xA96DAF4459E7d01EF60A8fDd25b7516D9c973386";
         const abi = [
             "function buyTickets(uint256 amount) external payable",
-            "function ticketsSold() public view returns (uint256)",
-            "function getBalance() public view returns (uint256)"
+            "function ticketsSold() public view returns (uint256)"
         ];
 
         let signer, contract;
@@ -64,7 +63,7 @@
                 const sold = await contract.ticketsSold();
                 document.getElementById('ticketsSold').innerText = sold.toString();
                 const balance = await contract.provider.getBalance(contractAddress);
-                document.getElementById('prizePool').innerText = ethers.utils.formatEther(balance) + " ETH";
+                document.getElementById('prizePool').innerText = ethers.utils.formatEther(balance) + " ANKR";
             } catch (e) { console.error("Update error", e); }
         }
 
@@ -90,13 +89,13 @@
             try {
                 const qty = document.getElementById('ticketQty').value;
                 const totalValue = ethers.utils.parseEther("0.01").mul(qty);
-                document.getElementById('status').innerText = "Processing transaction...";
+                document.getElementById('status').innerText = "Confirming in Rabby...";
                 const tx = await contract.buyTickets(qty, { value: totalValue });
                 await tx.wait();
                 document.getElementById('status').innerText = "Successfully purchased!";
                 updateStats();
             } catch (err) {
-                document.getElementById('status').innerText = "Error: " + (err.reason || "Check funds");
+                document.getElementById('status').innerText = "Error: Check your ANKR balance";
             }
         };
     </script>
