@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Neural Lottery | Neura Testnet</title>
@@ -15,20 +15,20 @@
 <body>
     <div class="card">
         <h1>Neural Lottery 🧠</h1>
-        <p>Сеть: Neura Testnet (267)</p>
-        <button id="connectBtn">Подключить Rabby</button>
+        <p>Network: Neura Testnet (267)</p>
+        <button id="connectBtn">Connect Rabby Wallet</button>
         <div id="gameArea" style="display:none;">
-            <p>Ваш адрес: <span id="userAddr"></span></p>
+            <p>Your Address: <span id="userAddr"></span></p>
             <hr>
-            <h3>Купить билеты (0.01 ETH за шт.)</h3>
+            <h3>Buy Tickets (0.01 ETH each)</h3>
             <input type="number" id="ticketQty" value="1" min="1">
-            <button id="buyBtn">Купить билеты</button>
+            <button id="buyBtn">Buy Tickets</button>
             <p id="status"></p>
         </div>
     </div>
 
     <script>
-       const contractAddress = "0xA96DAF4459E7d01EF60A8fDd25b7516D9c973386";
+        const contractAddress = "0xA96DAF4459E7d01EF60A8fDd25b7516D9c973386";
         const abi = [
             "function buyTickets(uint256 amount) external payable",
             "function ticketsSold() public view returns (uint256)"
@@ -48,7 +48,7 @@
                 document.getElementById('connectBtn').style.display = 'none';
                 document.getElementById('gameArea').style.display = 'block';
             } else {
-                alert("Пожалуйста, установите Rabby Wallet!");
+                alert("Please install Rabby Wallet!");
             }
         };
 
@@ -58,17 +58,15 @@
                 const price = ethers.utils.parseEther("0.01");
                 const totalValue = price.mul(qty);
 
-                document.getElementById('status').innerText = "Ожидание подтверждения...";
+                document.getElementById('status').innerText = "Waiting for confirmation...";
                 const tx = await contract.buyTickets(qty, { value: totalValue });
                 await tx.wait();
-                document.getElementById('status').innerText = "Успешно куплено!";
+                document.getElementById('status').innerText = "Tickets purchased successfully!";
             } catch (err) {
                 console.error(err);
-                document.getElementById('status').innerText = "Ошибка: " + err.reason;
+                document.getElementById('status').innerText = "Error: " + (err.reason || "Transaction failed");
             }
         };
     </script>
 </body>
-
 </html>
-
