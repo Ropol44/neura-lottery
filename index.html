@@ -3,68 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neural Lottery | Neura ANKR Dashboard</title>
+    <title>Neural Lottery | Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #0b0e14; --card: #161b22; --accent: #f59e0b; --text: #f0f6fc; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .dashboard { width: 90%; max-width: 1000px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 20px; }
-        .card { background: var(--card); border: 1px solid #30363d; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.5); transition: 0.3s; }
-        .card:hover { border-color: var(--accent); }
-        .stat-value { font-size: 24px; font-weight: bold; color: #f59e0b; margin: 10px 0; }
-        .main-panel { grid-column: 1 / -1; background: linear-gradient(145deg, #1e1b4b, #161b22); padding: 40px; }
-        button { background: var(--accent); color: #000; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 15px; font-size: 16px; }
-        button:hover { filter: brightness(1.1); }
-        input { background: #0d1117; border: 1px solid #30363d; color: white; padding: 12px; border-radius: 8px; width: 80px; text-align: center; }
-        .status { margin-top: 15px; font-size: 14px; color: #8b949e; }
+        :root { --bg: #0b0e14; --card: #161b22; --accent: #7c3aed; --secondary: #f59e0b; --text: #f0f6fc; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 40px 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 900px; }
+        
+        /* Стили карточек как в Demo */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: var(--card); border: 1px solid #30363d; padding: 20px; border-radius: 12px; position: relative; overflow: hidden; }
+        .stat-label { color: #8b949e; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+        .stat-value { font-size: 24px; font-weight: 700; margin-top: 8px; color: #3fb950; }
+        
+        /* Главная панель покупки */
+        .main-card { background: var(--card); border: 1px solid #30363d; border-radius: 16px; padding: 40px; text-align: center; position: relative; }
+        .progress-container { background: #30363d; height: 8px; border-radius: 4px; margin: 25px 0; overflow: hidden; }
+        .progress-bar { background: linear-gradient(90deg, #7c3aed, #3b82f6); height: 100%; width: 0%; transition: width 1s ease; }
+        
+        .buy-zone { background: #0d1117; border-radius: 12px; padding: 30px; margin-top: 30px; border: 1px dashed #30363d; }
+        .input-group { display: flex; justify-content: center; align-items: center; gap: 15px; margin: 20px 0; }
+        input { background: #161b22; border: 1px solid #30363d; color: white; padding: 12px; border-radius: 8px; width: 60px; text-align: center; font-size: 18px; }
+        
+        button { background: #f59e0b; color: #000; border: none; padding: 14px 40px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 16px; transition: 0.2s; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); }
+        #connectBtn { background: var(--accent); color: white; }
+
+        .badge { background: #23863622; color: #3fb950; padding: 4px 12px; border-radius: 20px; font-size: 12px; border: 1px solid #238636; }
     </style>
 </head>
 <body>
-    <div class="dashboard">
-        <div class="card main-panel">
-            <h1>Neural Lottery 🧠</h1>
-            <p id="networkStatus">Connect wallet to start</p>
-            <button id="connectBtn">Connect Rabby Wallet</button>
-            <div id="controls" style="display:none;">
-                <p>Your Address: <small id="userAddr" style="color: #8b949e;"></small></p>
-                <div style="margin-top: 30px;">
-                    <input type="number" id="ticketQty" value="1" min="1">
-                    <button id="buyBtn" style="width: auto; margin-left: 10px;">Buy Tickets</button>
-                </div>
-                <p id="status" class="status"></p>
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">💰 Prize Pool</div>
+                <div class="stat-value" id="prizePool">0.00 ANKR</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">🎟️ Tickets Sold</div>
+                <div class="stat-value" id="ticketsSold">0 / 100</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">👤 Your Tickets</div>
+                <div class="stat-value" id="yourTickets">0</div>
             </div>
         </div>
 
-        <div class="card">
-            <div>Prize Pool 💰</div>
-            <div class="stat-value" id="prizePool">0.00 ANKR</div>
-        </div>
-        <div class="card">
-            <div>Tickets Sold 🎟️</div>
-            <div class="stat-value" id="ticketsSold">0</div>
-        </div>
-        <div class="card">
-            <div>Price per Ticket</div>
-            <div class="stat-value">0.01 ANKR</div>
+        <div class="main-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="badge">Round #1</span>
+                <small id="netName" style="color: #8b949e;">Neura Testnet</small>
+            </div>
+            
+            <h1 style="margin: 20px 0 10px 0;">Neural Lottery 🧠</h1>
+            <p style="color: #8b949e;">Secure decentralized lottery powered by AI nodes</p>
+
+            <div class="progress-container"><div class="progress-bar" id="pBar"></div></div>
+
+            <button id="connectBtn">Connect Wallet</button>
+
+            <div id="gameArea" style="display:none;">
+                <div class="buy-zone">
+                    <h3>Buy Tickets</h3>
+                    <p style="font-size: 14px; color: #8b949e;">0.01 ANKR per ticket</p>
+                    <div class="input-group">
+                        <input type="number" id="ticketQty" value="1" min="1">
+                        <button id="buyBtn">Purchase Tickets</button>
+                    </div>
+                    <p id="status" style="font-size: 13px; color: #3fb950;"></p>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
         const contractAddress = "0xA96DAF4459E7d01EF60A8fDd25b7516D9c973386";
-        const abi = [
-            "function buyTickets(uint256 amount) external payable",
-            "function ticketsSold() public view returns (uint256)"
-        ];
-
+        const abi = ["function buyTickets(uint256 amount) external payable", "function ticketsSold() public view returns (uint256)"];
         let signer, contract;
 
-        async function updateStats() {
+        async function refreshData() {
             try {
                 const sold = await contract.ticketsSold();
-                document.getElementById('ticketsSold').innerText = sold.toString();
-                const balance = await contract.provider.getBalance(contractAddress);
-                document.getElementById('prizePool').innerText = ethers.utils.formatEther(balance) + " ANKR";
-            } catch (e) { console.error("Update error", e); }
+                const bal = await contract.provider.getBalance(contractAddress);
+                document.getElementById('ticketsSold').innerText = sold + " / 100";
+                document.getElementById('prizePool').innerText = ethers.utils.formatEther(bal) + " ANKR";
+                document.getElementById('pBar').style.width = sold + "%";
+            } catch(e) {}
         }
 
         document.getElementById('connectBtn').onclick = async () => {
@@ -73,30 +98,23 @@
                 await provider.send("eth_requestAccounts", []);
                 signer = provider.getSigner();
                 contract = new ethers.Contract(contractAddress, abi, signer);
-                
-                const addr = await signer.getAddress();
-                document.getElementById('userAddr').innerText = addr;
                 document.getElementById('connectBtn').style.display = 'none';
-                document.getElementById('controls').style.display = 'block';
-                document.getElementById('networkStatus').innerText = "Network: Neura Testnet";
-                
-                setInterval(updateStats, 5000);
-                updateStats();
+                document.getElementById('gameArea').style.display = 'block';
+                refreshData();
+                setInterval(refreshData, 5000);
             }
         };
 
         document.getElementById('buyBtn').onclick = async () => {
+            const qty = document.getElementById('ticketQty').value;
+            const val = ethers.utils.parseEther("0.01").mul(qty);
             try {
-                const qty = document.getElementById('ticketQty').value;
-                const totalValue = ethers.utils.parseEther("0.01").mul(qty);
-                document.getElementById('status').innerText = "Confirming in Rabby...";
-                const tx = await contract.buyTickets(qty, { value: totalValue });
+                const tx = await contract.buyTickets(qty, { value: val });
+                document.getElementById('status').innerText = "Transaction pending...";
                 await tx.wait();
-                document.getElementById('status').innerText = "Successfully purchased!";
-                updateStats();
-            } catch (err) {
-                document.getElementById('status').innerText = "Error: Check your ANKR balance";
-            }
+                document.getElementById('status').innerText = "Success!";
+                refreshData();
+            } catch(e) { document.getElementById('status').innerText = "Error!"; }
         };
     </script>
 </body>
