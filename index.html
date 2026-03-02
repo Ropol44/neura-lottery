@@ -28,7 +28,7 @@
     </div>
 
     <script>
-        const contractAddress = "0xA02758177B57aA1807A66782806853C96662BB75";
+        const contractAddress = ethers.utils.getAddress("0xA02758177B57aA1807A66782806853C96662BB75");
         const abi = [
             "function buyTickets(uint256 amount) external payable",
             "function ticketsSold() public view returns (uint256)"
@@ -69,4 +69,5 @@
         };
     </script>
 </body>
+
 </html>
